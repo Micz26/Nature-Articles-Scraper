@@ -1,0 +1,57 @@
+import requests
+from bs4 import BeautifulSoup
+import string
+import os
+
+
+def scrape_nature_articles():
+    n = input()
+    type = input()
+    for x in range(1, int(n) + 1):
+        url = 'https://www.nature.com/nature/articles?sort=PubDate&year=2020&page=' + str(x)
+        dir_name = 'Page_' + str(x)
+        os.makedirs(dir_name)
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            articles = soup.find_all('article')
+
+            for article in articles:
+                article_type = article.find('span', attrs={'data-test': 'article.type'}).text.strip()
+
+                if article_type == type:
+                    article_link = article.find('a', attrs={'data-track-action': 'view article'})['href']
+                    article_response = requests.get('https://www.nature.com' + article_link)
+
+                    if article_response.status_code == 200:
+                        article_soup = BeautifulSoup(article_response.content, 'html.parser')
+                        article_title_element = article_soup.find('h1', class_='c-article-magazine-title')
+                        article_body_element = article_soup.find('p', class_='article__teaser')
+
+                        if article_title_element and article_body_element:
+                            article_title = article_title_element.get_text().strip()
+                            article_body = article_body_element.get_text().strip()
+                        else:
+                            print("Error: Unable to find article title or body.")
+                            continue
+
+                        # Remove punctuation and strip trailing whitespaces from title
+                        title = article_title.translate(str.maketrans(" ", "_", string.punctuation)).strip()
+                        # Replace whitespaces in title with underscores
+                        file_name = f"{dir_name}\{title}.txt"
+
+                        # Strip trailing whitespaces from the article body
+                        article_body = article_body.strip()
+
+                        with open(file_name, 'w', encoding='utf-8') as file:
+                            file.write(article_body)
+                        print(f"Saved article: {title}")
+                    else:
+                        print(f"Error retrieving article page ({article_link}): {article_response.status_code}")
+
+        else:
+            print(f"Error retrieving article list page: {response.status_code}")
+
+
+if __name__ == '__main__':
+    scrape_nature_articles()

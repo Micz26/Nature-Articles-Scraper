@@ -1,1 +1,2 @@
-# Web-scraper
+# Nature Articles Scraper
+This project involves a Python script for scraping articles from the Nature website based on specified criteria. The script uses the `requests` library to fetch web pages and the `BeautifulSoup` library to parse HTML content. The script scrapes articles from the Nature website based on the specified article type. It iterates through the specified number of pages and extracts articles matching the provided type. For each article, it fetches the article page, extracts the title and body, processes them, and saves the content as a text file in the appropriate directory.
